@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
 
+
 # Step 2: Prepare the dataset and perform data preprocessing
 
 def load_dataset(label_to_index):
@@ -20,6 +21,7 @@ def load_dataset(label_to_index):
     index = 0
 
     for label in os.listdir(directory):
+        # full path to the subdirectory by joining the directory with label
         subdirectory = os.path.join(directory, label)
 
         if os.path.isdir(subdirectory):
@@ -28,24 +30,28 @@ def load_dataset(label_to_index):
 
             # Process each image file
             for image_file in image_files:
+                # Create the full path to the image file
                 image_path = os.path.join(subdirectory, image_file)
 
                 # Load image
                 image = cv2.imread(image_path)
+                # If the image is None (failed to load), the code continues to the next image file.
                 if image is None:
                     continue
 
-                processed_image = preprocess_image(image)
+                processed_image = preprocess_image(image)  # preprocess image
 
                 # Append processed image and label to the lists
                 images.append(processed_image)
 
+                # heck if the label is already present in the label_to_index dictionary.
+                # If not, assign a new index to it and add the mapping to the dictionary.
                 if label not in label_to_index:
                     label_to_index[label] = index
                     index += 1
                 labels.append(label_to_index[label])
 
-    # Convert lists to numpy arrays
+    # Convert lists to numpy arrays to be used with tensorflow
     images = np.array(images)
     labels = np.array(labels)
 
@@ -58,10 +64,11 @@ def preprocess_image(image):
     normalized_image = resized_image / 255.0  # Normalize pixel values to the range [0, 1]
     return normalized_image
 
+
 # Load and preprocess the dataset
 
-image_height = 224  # Set the desired image height
-image_width = 224  # Set the desired image width
+image_height = 64  # Set the desired image height
+image_width = 64  # Set the desired image width
 num_channels = 3  # Set the number of image channels (3 for RGB images)
 
 num_epochs = 10  # Set the number of training epochs
@@ -79,7 +86,8 @@ else:
     images, labels = load_dataset(label_to_index)
 
     # Split the dataset into training and testing sets
-    train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2, random_state=42)
+    train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2,
+                                                                            random_state=42)
 
     # Get the number of unique classes
     num_classes = len(np.unique(labels))
@@ -114,7 +122,8 @@ test_loss, test_accuracy = model.evaluate(test_images, test_labels)
 
 # Step 7: Predict on new images
 
-new_image_paths = ['Kerasimages/Test/Hexagon/Image00001_Hexagon1.png', 'Kerasimages/Train/A/Image00001_A1big.png', 'Kerasimages/Train/Circle/Image00001_Circle1.png']
+new_image_paths = ['Kerasimages/Test/Hexagon/images.jpg', 'Kerasimages/Train/A/Image00001_A1big.png',
+                   'Kerasimages/Train/Circle/Image00001_Circle1.png']
 
 # Preprocess and predict on new images
 predictions = []
@@ -139,4 +148,4 @@ for new_image_path in new_image_paths:
 
 # Print the predicted labels with class names for each image
 for i in range(len(new_image_paths)):
-    print(f"Image {i+1} is classified as {predictions[i]}")
+    print(f"Image {i + 1} is classified as {predictions[i]}")

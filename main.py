@@ -14,7 +14,7 @@ def load_dataset(label_to_index):
     labels = []
 
     # Specify the directory containing the images
-    directory = 'Kerasimages/Train'
+    directory = 'Kerasimages/Validate'
 
     # Loop through subdirectories
     index = 0
@@ -53,10 +53,13 @@ def load_dataset(label_to_index):
 
 
 def preprocess_image(image):
-    # Preprocess the image (resize, normalize, etc.)
+    if image is None:
+        # Return None if the image is not loaded successfully
+        return None
     resized_image = cv2.resize(image, (64, 64))  # Resize image to a fixed size
     normalized_image = resized_image / 255.0  # Normalize pixel values to the range [0, 1]
     return normalized_image
+
 
 # Load and preprocess the dataset
 
@@ -64,7 +67,7 @@ image_height = 224  # Set the desired image height
 image_width = 224  # Set the desired image width
 num_channels = 3  # Set the number of image channels (3 for RGB images)
 
-num_epochs = 1  # Set the number of training epochs
+num_epochs = 2  # Set the number of training epochs
 batch_size = 32  # Set the batch size for training
 
 label_to_index = {}  # Dictionary to map label names to numerical indices
@@ -114,29 +117,43 @@ test_loss, test_accuracy = model.evaluate(test_images, test_labels)
 
 # Step 7: Predict on new images
 
-new_image_paths = ['Kerasimages/Train/A/Image00001_A1_ss.png', 'Kerasimages/Train/A/Image00001_A1big.png', 'Kerasimages/Train/Circle/Image00001_Circle1.png']
+directory = 'Kerasimages/Test'
 
 # Preprocess and predict on new images
 predictions = []
-for new_image_path in new_image_paths:
-    # Load and preprocess the new image
-    new_image = cv2.imread(new_image_path)
-    processed_new_image = preprocess_image(new_image)
 
-    # Expand dimensions to match the input shape of the model
-    processed_new_image = np.expand_dims(processed_new_image, axis=0)
+for label in os.listdir(directory):
+    subdirectory = os.path.join(directory, label)
 
-    # Predict the label for the new image
-    prediction = model.predict(processed_new_image)
+    if os.path.isdir(subdirectory):
+        image_files = os.listdir(subdirectory)
 
-    # Get the predicted class index
-    predicted_class_index = np.argmax(prediction)
+        for image_file in image_files:
+            image_path = os.path.join(subdirectory, image_file)
 
-    # Map the predicted class index to the class name
-    predicted_class = [k for k, v in label_to_index.items() if v == predicted_class_index][0]
+            # Load and preprocess the new image
+            new_image = cv2.imread(image_path)
+            processed_new_image = preprocess_image(new_image)
 
-    predictions.append(predicted_class)
+            if processed_new_image is None:
+                # Skip the image if it fails to load
+                continue
+
+            # Expand dimensions to match the input shape of the model
+            processed_new_image = np.expand_dims(processed_new_image, axis=0)
+
+            # Predict the label for the new image
+            prediction = model.predict(processed_new_image)
+
+            # Get the predicted class index
+            predicted_class_index = np.argmax(prediction)
+
+            # Map the predicted class index to the class name
+            predicted_class = [k for k, v in label_to_index.items() if v == predicted_class_index][0]
+
+            predictions.append(predicted_class)
+
 
 # Print the predicted labels with class names for each image
-for i in range(len(new_image_paths)):
+for i in range(len(predictions)):
     print(f"Image {i+1} is classified as {predictions[i]}")

@@ -5,7 +5,8 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
-
+from skimage.util import img_as_ubyte
+from skimage.filters import threshold_multiotsu
 
 # Step 1: Load the trained model
 
@@ -65,7 +66,20 @@ def load_dataset(label_to_index):
 
 
 def preprocess_image(image):
-    # Preprocess the image (resize, normalize, etc.)
+    # Preprocess the image (use Otsu's and resize, normalize, etc.)
+    # Use Otsu's to establish cutoffs for classes
+    # cutoffs = threshold_multiotsu(image, classes=2)
+    # classes = np.digitize(image, bins=cutoffs)
+
+    # Use only black and white pixels - pixels with the same color are in the same class
+    # image = img_as_ubyte(classes)
+    # for i in range(len(image)):
+    #     for j in range(len(image[0])):
+    #         for k in range(len(image[0][0])):
+    #             if image[i][j][k] == 1:
+    #                 image[i][j][k] = 0
+    #             else:
+    #                 image[i][j][k] = 255
     resized_image = cv2.resize(image, (192, 192))  # Resize grid cell to 64x64 pixels
     normalized_image = resized_image / 255.0  # Normalize pixel values to the range [0, 1]
     return normalized_image

@@ -1,6 +1,6 @@
 import os
 import tensorflow as tf
-from keras.models import Sequential, load_model
+from tensorflow.python. keras.models import Sequential, load_model
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 import cv2
 import numpy as np
@@ -71,7 +71,7 @@ image_height = 64  # Set the desired image height
 image_width = 64  # Set the desired image width
 num_channels = 3  # Set the number of image channels (3 for RGB images)
 
-num_epochs = 10  # Set the number of training epochs
+num_epochs = 1  # Set the number of training epochs
 batch_size = 32  # Set the batch size for training
 
 label_to_index = {}  # Dictionary to map label names to numerical indices
@@ -81,6 +81,13 @@ if os.path.exists('model.h5'):
     # Load the model from disk
     model = load_model('model.h5')
     print('Loaded model from disk')
+    # Train the model
+    images, labels = load_dataset(label_to_index)
+
+    # Split the dataset into training and testing sets
+    train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.2,
+                                                                            random_state=42)
+
 else:
     # Train the model
     images, labels = load_dataset(label_to_index)
@@ -114,15 +121,23 @@ else:
     model.fit(train_images, train_labels, epochs=num_epochs, batch_size=batch_size)
 
     # Save the model to disk
-    # model.save('model.h5')
-    # print('Saved model to disk')
+    model.save('model.h5')
+    print('Saved model to disk')
+
+# Get the number of classes from the loaded model
+num_classes = model.layers[-1].output_shape[-1]
+
+# Convert labels to categorical format
+test_labels_categorical = to_categorical(test_labels, num_classes)
 
 # Step 6: Evaluate the model
-test_loss, test_accuracy = model.evaluate(test_images, test_labels)
+#test_loss, test_accuracy = model.evaluate(test_images, test_labels_categorical)
+
+
 
 # Step 7: Predict on new images
 
-new_image_paths = ['Kerasimages/Test/Hexagon/images.jpg', 'Kerasimages/Train/A/Image00001_A1big.png',
+new_image_paths = ['Kerasimages/Validate/R/Image00001_R2.png', 'Kerasimages/Validate/Triangle/Image00001_Triangle2big.png', 'Kerasimages/Train/A/Image00001_A1big.png',
                    'Kerasimages/Train/Circle/Image00001_Circle1.png']
 
 # Preprocess and predict on new images
